@@ -47,6 +47,7 @@ async function proxyRequest(
 
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("transfer-encoding");
+  responseHeaders.delete("content-encoding"); // body already decoded by fetch()
 
   const response = new NextResponse(upstream.body, {
     status: upstream.status,
