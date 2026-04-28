@@ -382,7 +382,7 @@ function WorkOrdersContent() {
               {/* Repair cost + warranty */}
               <div className="flex items-end gap-4 rounded border border-slate-800 bg-slate-900/40 px-3 py-3">
                 <div className="flex-1">
-                  <label className="fsm-label">ค่าใช้จ่าย (บาท)</label>
+                  <label className="fsm-label">Repair Cost (THB)</label>
                   <input
                     type="number" min="0" step="0.01"
                     value={form.repair_cost}
@@ -400,11 +400,11 @@ function WorkOrdersContent() {
                       onChange={(e) => setForm((f) => ({ ...f, warranty_covered: e.target.checked, repair_cost: e.target.checked ? "" : f.repair_cost }))}
                       className="h-4 w-4 accent-emerald-400"
                     />
-                    {isInWarranty ? "🛡 Warranty covers" : "ไม่อยู่ในประกัน"}
+                    {isInWarranty ? "🛡 Warranty covers" : "Not under warranty"}
                   </label>
                   {selectedAsset?.warranty_expires_at && (
                     <p className="mt-0.5 text-xs text-slate-600">
-                      หมดประกัน {new Date(selectedAsset.warranty_expires_at).toLocaleDateString("th-TH")}
+                      Expires {new Date(selectedAsset.warranty_expires_at).toLocaleDateString("en-GB")}
                     </p>
                   )}
                 </div>
