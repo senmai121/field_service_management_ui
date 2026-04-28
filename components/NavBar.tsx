@@ -21,6 +21,7 @@ export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [masterOpen, setMasterOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   async function handleLogout() {
     await logout();
@@ -35,7 +36,7 @@ export default function NavBar() {
     <nav className="relative z-40 border-b border-slate-800 bg-slate-950">
       <div className="flex h-14 items-center justify-between px-6">
 
-        {/* Brand + Nav */}
+        {/* Brand + Desktop Nav */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -53,8 +54,9 @@ export default function NavBar() {
             </span>
           </Link>
 
+          {/* Desktop nav — hidden on mobile */}
           {user && (
-            <div className="flex items-center">
+            <div className="hidden md:flex items-center">
               <Link
                 href="/"
                 className={`relative px-3 py-4 text-sm font-medium transition-colors ${
@@ -129,7 +131,7 @@ export default function NavBar() {
                         {pathname === link.href && (
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
                         )}
-                                    <span className={pathname === link.href ? "" : "pl-4"}>{link.label}</span>
+                        <span className={pathname === link.href ? "" : "pl-4"}>{link.label}</span>
                       </Link>
                     ))}
                   </div>
@@ -139,22 +141,111 @@ export default function NavBar() {
           )}
         </div>
 
-        {/* User */}
+        {/* Right side */}
         {user && (
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-400 text-[10px] font-bold text-slate-950">
               {initials}
             </div>
             <span className="hidden text-sm text-slate-300 lg:block">{user.username}</span>
+            {/* Sign out — desktop only */}
             <button
               onClick={handleLogout}
-              className="border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+              className="hidden md:block border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
             >
               Sign out
+            </button>
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setMobileOpen((o) => !o)}
+              className="md:hidden flex items-center justify-center p-1.5 text-slate-300 hover:text-white"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? (
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
             </button>
           </div>
         )}
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && user && (
+        <div className="md:hidden border-t border-slate-800 bg-slate-950 pb-4">
+          <div className="flex flex-col">
+            <Link
+              href="/"
+              onClick={() => setMobileOpen(false)}
+              className={`border-l-2 px-6 py-3 text-sm font-medium transition-colors ${
+                isActive("/")
+                  ? "border-amber-400 bg-amber-400/5 text-amber-400"
+                  : "border-transparent text-slate-300 hover:bg-slate-900 hover:text-white"
+              }`}
+            >
+              Dashboard
+            </Link>
+
+            <Link
+              href="/work-orders"
+              onClick={() => setMobileOpen(false)}
+              className={`border-l-2 px-6 py-3 text-sm font-medium transition-colors ${
+                isActive("/work-orders")
+                  ? "border-amber-400 bg-amber-400/5 text-amber-400"
+                  : "border-transparent text-slate-300 hover:bg-slate-900 hover:text-white"
+              }`}
+            >
+              Work Orders
+            </Link>
+
+            <Link
+              href="/technician/work-orders"
+              onClick={() => setMobileOpen(false)}
+              className={`border-l-2 px-6 py-3 text-sm font-medium transition-colors ${
+                pathname.startsWith("/technician")
+                  ? "border-amber-400 bg-amber-400/5 text-amber-400"
+                  : "border-transparent text-slate-300 hover:bg-slate-900 hover:text-white"
+              }`}
+            >
+              My Assignment
+            </Link>
+
+            {/* Master Data section */}
+            <div className="mt-2 px-6 pb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+              Master Data
+            </div>
+            {MASTER_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`border-l-2 px-6 py-2.5 text-sm transition-colors ${
+                  pathname === link.href
+                    ? "border-amber-400 bg-amber-400/5 text-amber-400"
+                    : "border-transparent text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Sign out */}
+            <div className="mt-4 px-6">
+              <button
+                onClick={() => { setMobileOpen(false); handleLogout(); }}
+                className="w-full border border-slate-700 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
