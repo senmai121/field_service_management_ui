@@ -48,6 +48,7 @@ async function proxyRequest(
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("transfer-encoding");
   responseHeaders.delete("content-encoding"); // body already decoded by fetch()
+  responseHeaders.delete("content-length");   // length was for compressed body, now invalid
 
   const response = new NextResponse(upstream.body, {
     status: upstream.status,
