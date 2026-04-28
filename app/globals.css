@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020617;
+  --foreground: #f1f5f9;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-space-mono);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #020617;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.05) 1px, transparent 0);
+  background-size: 28px 28px;
+  color: #f1f5f9;
+  font-family: var(--font-dm-sans, system-ui, sans-serif);
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* Semantic form classes */
+.fsm-input {
+  @apply w-full border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-amber-400;
+}
+
+.fsm-label {
+  @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400;
+}
+
+.fsm-btn-primary {
+  @apply bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-300 disabled:opacity-50;
+}
+
+.fsm-btn-cancel {
+  @apply border border-slate-700 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200;
+}
+
+.fsm-error {
+  @apply text-sm text-red-400;
+}
+
+.fsm-badge-active {
+  @apply inline-flex items-center gap-1 border border-emerald-900 bg-emerald-950 px-2 py-0.5 text-xs font-medium text-emerald-400;
+}
+
+.fsm-badge-inactive {
+  @apply inline-flex items-center gap-1 border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-500;
+}
+
+.fsm-page-action {
+  @apply bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-300;
+}
