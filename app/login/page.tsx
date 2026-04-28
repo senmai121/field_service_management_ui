@@ -2,9 +2,11 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function LoginPage() {
+  // Silently wake up Render free tier in the background
+  useEffect(() => { fetch("/api/ping").catch(() => {}); }, []);
   const { login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
