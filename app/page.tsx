@@ -3,6 +3,156 @@
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { useAuth } from "@/lib/auth-context";
+import { useEffect, useState } from "react";
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+} from "recharts";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+type StatusItem = { status: string; count: number };
+type OnTimeItem = { month: string; on_time: number; late: number };
+type TechItem   = { technician_id: number; technician_name: string; hours: number };
+
+// ─── Colour map for status donut ─────────────────────────────────────────────
+const STATUS_COLOR: Record<string, string> = {
+  open:        "#fbbf24",
+  in_progress: "#38bdf8",
+  completed:   "#34d399",
+  cancelled:   "#94a3b8",
+};
+
+// ─── Chart components (client-only, use recharts) ────────────────────────────
+function StatusDonut({ data }: { data: StatusItem[] }) {
+  const total = data.reduce((s, d) => s + d.count, 0);
+  return (
+    <div className="flex flex-col gap-2">
+      <ResponsiveContainer width="100%" height={200}>
+        <PieChart>
+          <Pie data={data} dataKey="count" nameKey="status" innerRadius={55} outerRadius={85} paddingAngle={2}>
+            {data.map((d) => (
+              <Cell key={d.status} fill={STATUS_COLOR[d.status] ?? "#64748b"} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(v, name) => [v, String(name).replace("_", " ")]}
+            contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", fontSize: 12 }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      {/* Legend */}
+      <div className="flex flex-wrap justify-center gap-3">
+        {data.map((d) => (
+          <span key={d.status} className="flex items-center gap-1.5 text-xs text-slate-400">
+            <span className="h-2 w-2 rounded-full" style={{ background: STATUS_COLOR[d.status] ?? "#64748b" }} />
+            {d.status.replace("_", " ")} ({d.count})
+          </span>
+        ))}
+      </div>
+      <p className="text-center text-[10px] text-slate-500">Total: {total} work orders</p>
+    </div>
+  );
+}
+
+function OnTimeBar({ data }: { data: OnTimeItem[] }) {
+  const fmt = (m: string) => {
+    const [y, mo] = m.split("-");
+    return new Date(+y, +mo - 1).toLocaleString("en", { month: "short", year: "2-digit" });
+  };
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <XAxis dataKey="month" tickFormatter={fmt} tick={{ fontSize: 11, fill: "#64748b" }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#64748b" }} />
+        <Tooltip
+          formatter={(v, name) => [v, name === "on_time" ? "On-Time" : "Late"]}
+          contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", fontSize: 12 }}
+        />
+        <Bar dataKey="on_time" name="On-Time" fill="#34d399" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="late"    name="Late"    fill="#f87171" radius={[2, 2, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function TechBar({ data }: { data: TechItem[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={Math.max(180, data.length * 36)}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+        <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} unit=" hr" />
+        <YAxis type="category" dataKey="technician_name" width={90} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+        <Tooltip
+          formatter={(v) => [`${v} hr`, "Hours worked"]}
+          contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", fontSize: 12 }}
+        />
+        <Bar dataKey="hours" fill="#818cf8" radius={[0, 2, 2, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ─── Dashboard charts section ─────────────────────────────────────────────────
+function DashboardCharts() {
+  const [statusData,  setStatusData]  = useState<StatusItem[] | null>(null);
+  const [onTimeData,  setOnTimeData]  = useState<OnTimeItem[] | null>(null);
+  const [techData,    setTechData]    = useState<TechItem[]   | null>(null);
+
+  useEffect(() => {
+    fetch("/api/proxy/api/fsm/dashboard/work-order-status")
+      .then((r) => r.json()).then(setStatusData).catch(() => setStatusData([]));
+    fetch("/api/proxy/api/fsm/dashboard/on-time-completion")
+      .then((r) => r.json()).then(setOnTimeData).catch(() => setOnTimeData([]));
+    fetch("/api/proxy/api/fsm/dashboard/technician-hours")
+      .then((r) => r.json()).then(setTechData).catch(() => setTechData([]));
+  }, []);
+
+  const loading = statusData === null || onTimeData === null || techData === null;
+
+  return (
+    <div className="mt-10">
+      <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+        Analytics
+      </div>
+      {loading ? (
+        <p className="text-xs text-slate-500">Loading charts…</p>
+      ) : (
+        <div className="grid gap-px sm:grid-cols-3">
+          {/* Work Order Status */}
+          <div className="bg-slate-900 p-5">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Work Order Status
+            </p>
+            {statusData.length === 0
+              ? <p className="text-xs text-slate-500">No data</p>
+              : <StatusDonut data={statusData} />}
+          </div>
+
+          {/* On-Time Completion */}
+          <div className="bg-slate-900 p-5">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              On-Time vs Late (6 mo)
+            </p>
+            {onTimeData.length === 0
+              ? <p className="text-xs text-slate-500">No data</p>
+              : <OnTimeBar data={onTimeData} />}
+          </div>
+
+          {/* Technician Hours */}
+          <div className="bg-slate-900 p-5">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Technician Hours (this month)
+            </p>
+            {techData.length === 0
+              ? <p className="text-xs text-slate-500">No data</p>
+              : <TechBar data={techData} />}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const DASHBOARD_CARDS = [
   {
@@ -130,6 +280,8 @@ function DashboardContent() {
           </Link>
         ))}
       </div>
+
+      <DashboardCharts />
     </div>
   );
 }
